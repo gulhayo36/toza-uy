@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toza Uy — Interaktiv Prototip</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #0B8457;
+    --green-dark: #06633F;
+    --green-light: #E8F5EE;
+    --amber: #F59E0B;
+    --blue: #3B82F6;
+    --red: #EF4444;
+    --success: #10B981;
+    --dark: #1E293B;
+    --text: #1A1D21;
+    --text2: #6B7280;
+    --text3: #9CA3AF;
+    --border: #E5E7EB;
+    --bg: #FAFBFC;
+    --white: #ffffff;
+    --font: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: #0f1117;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+    gap: 20px;
+  }
+
+  h1 {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 520px;
+  }
+  .tab {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid #333;
+    background: #1a1d24;
+    color: #888;
+    font-size: 12px;
+    font-family: var(--font);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab:hover { border-color: var(--green); color: var(--green); }
+  .tab.active { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 0 0 10px #1a1d24, 0 0 0 12px #2a2d34, 0 32px 80px rgba(0,0,0,0.6);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* SCREEN */
+  .screen { display: none; width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; position: absolute; top: 0; left: 0; background: var(--bg); }
+  .screen.active { display: block; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ───── COMMON ───── */
+  .status-bar {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+  .status-time { font-size: 14px; font-weight: 700; }
+  .status-icons { font-size: 13px; font-weight: 600; }
+  .status-bar.dark .status-time, .status-bar.dark .status-icons { color: #fff; }
+  .status-bar.light .status-time, .status-bar.light .status-icons { color: var(--text); }
+
+  .topbar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .topbar-back { font-size: 20px; cursor: pointer; color: var(--text); background: none; border: none; font-family: var(--font); }
+  .topbar-title { font-size: 17px; font-weight: 700; color: var(--text); }
+
+  .bottom-nav {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; opacity: 0.4; }
+  .nav-item.active { opacity: 1; }
+  .nav-item span:first-child { font-size: 18px; }
+  .nav-item span:last-child { font-size: 10px; font-weight: 600; color: var(--text2); }
+  .nav-item.active span:last-child { color: var(--green); }
+
+  .scroll-area { padding-bottom: 80px; }
+
+  .section-title {
+    font-size: 17px; font-weight: 700; color: var(--text);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 20px; margin-bottom: 12px;
+  }
+  .section-title a { font-size: 13px; font-weight: 600; color: var(--green); }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+
+  .btn {
+    width: 100%; height: 54px; border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    font-family: var(--font); transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.85; }
+  .btn-primary { background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #fff; }
+  .btn-secondary { background: transparent; border: 2px solid var(--green); color: var(--green); }
+  .btn-amber { background: linear-gradient(135deg, var(--amber), #D97706); color: #fff; }
+  .btn-disabled { background: var(--border); color: var(--text3); cursor: default; }
+
+  /* ───── SCREEN 0: WELCOME ───── */
+  #s0 { background: linear-gradient(160deg, var(--green-light) 0%, var(--bg) 60%); }
+  .welcome-logo {
+    width: 90px; height: 90px; border-radius: 24px;
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; margin: 0 auto;
+    box-shadow: 0 8px 24px rgba(11,132,87,0.35);
+  }
+  .welcome-content { padding: 0 30px; text-align: center; }
+  .welcome-title { font-size: 32px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .welcome-sub { font-size: 14px; color: var(--text2); margin-bottom: 4px; }
+  .welcome-slogan { font-size: 13px; color: var(--text3); margin-bottom: 50px; }
+  .welcome-btns { display: flex; flex-direction: column; gap: 12px; }
+  .welcome-badge { margin-top: 28px; font-size: 12px; color: var(--text3); }
+
+  /* ───── SCREEN 1: HOME ───── */
+  .home-header {
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    padding: 0 20px 32px;
+  }
+  .home-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .home-greeting { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .home-name { font-size: 20px; font-weight: 700; color: #fff; }
+  .notif-btn {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; border: none;
+  }
+  .search-bar {
+    height: 46px; border-radius: 14px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center;
+    padding: 0 14px; gap: 8px;
+    font-size: 14px; color: rgba(255,255,255,0.5);
+  }
+  .home-curve {
+    height: 32px; background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    margin-top: -16px;
+  }
+  .quick-actions { display: flex; gap: 10px; padding: 0 20px; margin-bottom: 20px; }
+  .quick-btn {
+    flex: 1; height: 56px; border-radius: 16px; background: var(--white);
+    border: 1px solid var(--border); display: flex; align-items: center;
+    gap: 10px; padding: 0 12px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .quick-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .quick-label { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  .services-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 20px; margin-bottom: 24px; }
+  .service-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+    padding: 12px; display: flex; flex-direction: column; align-items: center;
+    gap: 6px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.15s;
+  }
+  .service-card:active { transform: scale(0.96); }
+  .service-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .service-name { font-size: 12px; font-weight: 600; color: var(--text); text-align: center; }
+  .service-price { font-size: 11px; font-weight: 700; color: var(--green); }
+
+  .executor-list { display: flex; flex-direction: column; gap: 8px; padding: 0 20px; margin-bottom: 24px; }
+  .executor-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .executor-avatar {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--green-light); display: flex; align-items: center; justify-content: center; font-size: 22px;
+    flex-shrink: 0;
+  }
+  .executor-info { flex: 1; }
+  .executor-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .executor-type { font-size: 12px; color: var(--text2); }
+  .executor-stats { text-align: right; }
+  .executor-rating { font-size: 13px; font-weight: 700; color: var(--text); }
+  .executor-jobs { font-size: 11px; color: var(--text2); }
+
+  /* ───── SCREEN 2: BOOKING ───── */
+  .booking-service-card {
+    margin: 12px 20px;
+    background: rgba(11,132,87,0.07);
+    border: 1px solid rgba(11,132,87,0.2);
+    border-radius: 16px; padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .booking-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: rgba(11,132,87,0.12);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .field-label { font-size: 13px; font-weight: 600; color: var(--text); padding: 0 20px; margin-bottom: 8px; margin-top: 16px; }
+  .input-box {
+    margin: 0 20px;
+    height: 46px; border-radius: 12px;
+    background: var(--white); border: 1.5px solid var(--border);
+    display: flex; align-items: center; padding: 0 14px;
+    font-size: 14px; color: var(--text);
+  }
+  .time-chips { display: flex; gap: 8px; padding: 0 20px; flex-wrap: wrap; }
+  .chip {
+    height: 38px; padding: 0 16px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--white);
+    font-size: 13px; font-weight: 600; color: var(--text);
+    cursor: pointer; font-family: var(--font); transition: all 0.15s;
+  }
+  .chip.selected { background: var(--green); border-color: var(--green); color: #fff; }
+  .counter { display: flex; align-items: center; gap: 16px; padding: 0 20px; }
+  .counter-btn {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--white); border: 1.5px solid var(--border);
+    font-size: 20px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font); transition: all 0.15s;
+  }
+  .counter-btn:hover { border-color: var(--green); color: var(--green); }
+  .counter-val { font-size: 24px; font-weight: 700; color: var(--green); min-width: 32px; text-align: center; }
+  .price-summary {
+    margin: 16px 20px;
+    background: var(--green-light);
+    border: 1px solid rgba(11,132,87,0.15);
+    border-radius: 16px; padding: 16px;
+  }
+  .price-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+  .price-row.total { font-size: 15px; font-weight: 700; color: var(--text); border-top: 1px solid rgba(11,132,87,0.2); padding-top: 10px; margin-top: 4px; }
+  .price-row.total span:last-child { color: var(--green); }
+  .booking-btn-wrap { padding: 0 20px 32px; margin-top: 16px; }
+
+  /* ───── SCREEN 3: TRACKING ───── */
+  .order-header {
+    margin: 12px 20px;
+    background: var(--green-light);
+    border: 1px solid rgba(11,132,87,0.15);
+    border-radius: 14px; padding: 14px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .order-num-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .order-num { font-size: 16px; font-weight: 700; color: var(--green); }
+  .badge {
+    padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--success); }
+  .map-placeholder {
+    margin: 0 20px; height: 140px; border-radius: 16px;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 1px solid rgba(11,132,87,0.15);
+    font-size: 36px; gap: 8px;
+  }
+  .map-placeholder span { font-size: 13px; font-weight: 600; color: var(--green-dark); }
+  .stepper { padding: 16px 20px; display: flex; flex-direction: column; gap: 0; }
+  .step { display: flex; align-items: flex-start; gap: 14px; }
+  .step-left { display: flex; flex-direction: column; align-items: center; }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .step-circle.done { background: var(--green); color: #fff; }
+  .step-circle.current { background: var(--green); color: #fff; }
+  .step-circle.todo { background: var(--border); color: var(--text3); }
+  .step-line { width: 2px; height: 24px; background: var(--border); margin: 3px 0; }
+  .step-line.done { background: var(--green); }
+  .step-content { padding-bottom: 20px; }
+  .step-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .step-title.todo { color: var(--text3); }
+  .step-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .executor-mini {
+    margin: 0 20px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .call-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(16,185,129,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; border: none; margin-left: auto;
+  }
+  .rate-btn-wrap { padding: 16px 20px 32px; }
+
+  /* ───── SCREEN 4: RATING ───── */
+  .rating-avatar {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: var(--green-light);
+    display: flex; align-items: center; justify-content: center; font-size: 36px;
+    margin: 0 auto;
+  }
+  .stars-row { display: flex; justify-content: center; gap: 8px; margin: 16px 0 6px; }
+  .star {
+    font-size: 36px; cursor: pointer; transition: transform 0.15s;
+    color: var(--border); filter: grayscale(1);
+  }
+  .star.selected { color: var(--amber); filter: none; transform: scale(1.15); }
+  .rating-label { text-align: center; font-size: 14px; color: var(--text2); margin-bottom: 16px; }
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px; margin-bottom: 20px; }
+  .tag {
+    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--white); color: var(--text);
+    cursor: pointer; font-family: var(--font); transition: all 0.15s;
+  }
+  .tag.selected { background: var(--green); border-color: var(--green); color: #fff; }
+  .textarea-box {
+    margin: 0 20px 20px;
+    height: 90px; border-radius: 14px;
+    background: var(--white); border: 1.5px solid var(--border);
+    padding: 14px; font-size: 14px; color: var(--text3);
+    display: flex; align-items: flex-start;
+  }
+  .rating-btn-wrap { padding: 0 20px 32px; }
+
+  /* ───── SCREEN 5: EXECUTOR DASHBOARD ───── */
+  .exec-header {
+    background: linear-gradient(135deg, #1E293B, #0F172A);
+    padding: 0 20px 32px;
+  }
+  .exec-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .exec-avatar {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .exec-name-wrap { flex: 1; }
+  .exec-hi { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .exec-name { font-size: 16px; font-weight: 700; color: #fff; }
+  .online-badge {
+    padding: 6px 14px; border-radius: 16px;
+    background: rgba(16,185,129,0.15); border: 1.5px solid var(--success);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: var(--success); cursor: pointer;
+  }
+  .online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+  .exec-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .stat-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 12px; text-align: center;
+  }
+  .stat-val { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 10px; color: rgba(255,255,255,0.45); }
+  .exec-curve { height: 32px; background: var(--bg); border-radius: 24px 24px 0 0; margin-top: -16px; }
+
+  .chart-card { margin: 0 20px 20px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; margin-top: 10px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; border-radius: 4px; background: rgba(11,132,87,0.25); transition: height 0.3s; }
+  .bar.active { background: var(--green); }
+  .bar-day { font-size: 10px; color: var(--text3); }
+
+  .order-card {
+    margin: 0 20px 10px;
+    background: var(--white); border: 1.5px solid rgba(11,132,87,0.3); border-radius: 16px;
+    padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .order-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .order-type { font-size: 14px; font-weight: 700; color: var(--text); }
+  .order-price { font-size: 15px; font-weight: 800; color: var(--green); }
+  .order-meta { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .order-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .accept-btn {
+    flex: 1; height: 36px; border-radius: 10px;
+    background: var(--green); border: none; color: #fff;
+    font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font);
+  }
+  .reject-btn {
+    flex: 1; height: 36px; border-radius: 10px;
+    background: var(--white); border: 1.5px solid var(--border); color: var(--text2);
+    font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font);
+  }
+
+  /* ───── SCREEN 6: ACTIVE ORDER ───── */
+  .active-order-header {
+    margin: 12px 20px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    padding: 16px 20px;
+  }
+  .aoh-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .aoh-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+  .aoh-val { font-size: 18px; font-weight: 800; color: #fff; }
+  .aoh-price { font-size: 20px; font-weight: 800; color: #fff; }
+  .aoh-currency { font-size: 12px; color: rgba(255,255,255,0.7); }
+  .aoh-meta { display: flex; gap: 24px; margin-top: 12px; }
+  .aoh-meta-item { }
+  .client-card {
+    margin: 0 20px 16px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .client-avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(59,130,246,0.1);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .contact-btns { margin-left: auto; display: flex; gap: 8px; }
+  .contact-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; border: none;
+  }
+  .contact-btn.phone { background: rgba(16,185,129,0.1); }
+  .contact-btn.chat { background: rgba(59,130,246,0.1); }
+
+  .status-steps { display: flex; gap: 8px; padding: 0 20px; margin-bottom: 16px; }
+  .status-step {
+    flex: 1; height: 60px; border-radius: 12px;
+    background: var(--white); border: 1.5px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer; transition: all 0.15s; font-family: var(--font);
+  }
+  .status-step.active { background: var(--green); border-color: var(--green); }
+  .status-step.active span { color: #fff !important; }
+  .status-step span:first-child { font-size: 16px; }
+  .status-step span:last-child { font-size: 11px; font-weight: 600; color: var(--text); }
+
+  .timer-card {
+    margin: 0 20px 16px;
+    background: rgba(245,158,11,0.07);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 16px; padding: 16px;
+    text-align: center;
+  }
+  .timer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .timer-val { font-size: 32px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .checklist { padding: 0 20px; margin-bottom: 20px; }
+  .check-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 12px; font-weight: 700; color: #fff;
+    border: 1.5px solid var(--border); background: var(--white);
+    transition: all 0.15s;
+  }
+  .check-box.checked { background: var(--green); border-color: var(--green); }
+  .check-text { font-size: 14px; color: var(--text); }
+  .check-text.done { text-decoration: line-through; color: var(--text3); }
+  .complete-btn-wrap { padding: 0 20px 32px; }
+</style>
+</head>
+<body>
+
+<h1>Toza Uy — Interaktiv Prototip</h1>
+
+<div class="tabs">
+  <button class="tab active" onclick="showScreen(0)">00 Kirish</button>
+  <button class="tab" onclick="showScreen(1)">01 Bosh sahifa</button>
+  <button class="tab" onclick="showScreen(2)">02 Buyurtma</button>
+  <button class="tab" onclick="showScreen(3)">03 Kuzatish</button>
+  <button class="tab" onclick="showScreen(4)">04 Baholash</button>
+  <button class="tab" onclick="showScreen(5)">05 Ijrochi</button>
+  <button class="tab" onclick="showScreen(6)">06 Faol buyurtma</button>
+</div>
+
+<div class="phone">
+
+  <!-- ══════ SCREEN 0: WELCOME ══════ -->
+  <div class="screen active" id="s0">
+    <div class="status-bar light">
+      <span class="status-time">9:41</span>
+      <span class="status-icons">5G 🔋</span>
+    </div>
+    <div style="height:60px;"></div>
+    <div class="welcome-logo">✨</div>
+    <div style="height:30px;"></div>
+    <div class="welcome-content">
+      <div class="welcome-title">Toza Uy</div>
+      <div class="welcome-sub">Cleaning xizmatlari marketplace platformasi</div>
+      <div class="welcome-slogan">Tez • Qulay • Ishonchli</div>
+      <div class="welcome-btns">
+        <button class="btn btn-primary" onclick="showScreen(1)">🏠 &nbsp;Mijoz sifatida kirish</button>
+        <button class="btn btn-secondary" onclick="showScreen(5)">🧹 &nbsp;Ijrochi sifatida kirish</button>
+      </div>
+      <div class="welcome-badge">🛡 Barcha ijrochilar verifikatsiyadan o'tgan</div>
+    </div>
+  </div>
+
+  <!-- ══════ SCREEN 1: CLIENT HOME ══════ -->
+  <div class="screen" id="s1">
+    <div class="home-header">
+      <div class="status-bar dark" style="padding:0;">
+        <span class="status-time">9:41</span>
+        <span class="status-icons">5G 🔋</span>
+      </div>
+      <div class="home-header-top">
+        <div>
+          <div class="home-greeting">Xush kelibsiz!</div>
+          <div class="home-name">Toza Uy 🏠</div>
+        </div>
+        <button class="notif-btn">🔔</button>
+      </div>
+      <div class="search-bar">🔍 &nbsp;Xizmat yoki ijrochi qidiring...</div>
+    </div>
+    <div class="home-curve"></div>
+    <div class="scroll-area">
+      <div class="quick-actions">
+        <div class="quick-btn">
+          <div class="quick-icon" style="background:#FEF3C7;">⚡</div>
+          <span class="quick-label">Tez buyurtma</span>
+        </div>
+        <div class="quick-btn">
+          <div class="quick-icon" style="background:var(--green-light);">⭐</div>
+          <span class="quick-label">Eng yaxshilar</span>
+        </div>
+      </div>
+
+      <div class="section-title">Xizmatlar <a>Hammasi →</a></div>
+      <div class="services-grid">
+        <div class="service-card" onclick="showScreen(2)">
+          <div class="service-icon" style="background:rgba(11,132,87,0.1);">🏠</div>
+          <div class="service-name">Uy tozalash</div>
+          <div class="service-price">80 000</div>
+        </div>
+        <div class="service-card" onclick="showScreen(2)">
+          <div class="service-icon" style="background:rgba(59,130,246,0.1);">💼</div>
+          <div class="service-name">Ofis tozalash</div>
+          <div class="service-price">150 000</div>
+        </div>
+        <div class="service-card" onclick="showScreen(2)">
+          <div class="service-icon" style="background:rgba(139,92,246,0.1);">🪟</div>
+          <div class="service-name">Oyna yuvish</div>
+          <div class="service-price">50 000</div>
+        </div>
+        <div class="service-card" onclick="showScreen(2)">
+          <div class="service-icon" style="background:rgba(245,158,11,0.1);">🧺</div>
+          <div class="service-name">Gilam yuvish</div>
+          <div class="service-price">40 000</div>
+        </div>
+        <div class="service-card" onclick="showScreen(2)">
+          <div class="service-icon" style="background:rgba(239,68,68,0.1);">🛋</div>
+          <div class="service-name">Mebel tozalash</div>
+          <div class="service-price">60 000</div>
+        </div>
+        <div class="service-card" onclick="showScreen(2)">
+          <div class="service-icon" style="background:rgba(16,185,129,0.1);">✨</div>
+          <div class="service-name">Umumiy tozalash</div>
+          <div class="service-price">200 000</div>
+        </div>
+      </div>
+
+      <div class="section-title">Top ijrochilar <a>Hammasi →</a></div>
+      <div class="executor-list">
+        <div class="executor-card">
+          <div class="executor-avatar">👩‍🦰</div>
+          <div class="executor-info">
+            <div class="executor-name">Aziza Karimova</div>
+            <div class="executor-type">Uy tozalash</div>
+          </div>
+          <div class="executor-stats">
+            <div class="executor-rating">⭐ 4.9</div>
+            <div class="executor-jobs">234 ish</div>
+          </div>
+        </div>
+        <div class="executor-card">
+          <div class="executor-avatar">👨</div>
+          <div class="executor-info">
+            <div class="executor-name">Bobur Toshmatov</div>
+            <div class="executor-type">Ofis tozalash</div>
+          </div>
+          <div class="executor-stats">
+            <div class="executor-rating">⭐ 4.8</div>
+            <div class="executor-jobs">189 ish</div>
+          </div>
+        </div>
+        <div class="executor-card">
+          <div class="executor-avatar">👩</div>
+          <div class="executor-info">
+            <div class="executor-name">Dilnoza Rahimova</div>
+            <div class="executor-type">Umumiy tozalash</div>
+          </div>
+          <div class="executor-stats">
+            <div class="executor-rating">⭐ 4.9</div>
+            <div class="executor-jobs">312 ish</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <span>🏠</span><span style="color:var(--green);">Bosh sahifa</span>
+      </div>
+      <div class="nav-item" onclick="showScreen(3)">
+        <span>📋</span><span>Buyurtmalar</span>
+      </div>
+      <div class="nav-item">
+        <span>👤</span><span>Profil</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SCREEN 2: BOOKING ══════ -->
+  <div class="screen" id="s2">
+    <div class="topbar">
+      <button class="topbar-back" onclick="showScreen(1)">←</button>
+      <span class="topbar-title">Uy tozalash</span>
+    </div>
+    <div class="scroll-area">
+      <div class="booking-service-card">
+        <div class="booking-icon">🏠</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);">Uy tozalash</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:3px;">Professional tozalash xizmati</div>
+        </div>
+      </div>
+
+      <div class="field-label">📍 Manzil</div>
+      <div class="input-box">📍 Toshkent, Chilonzor t. 7-kvartal</div>
+
+      <div class="field-label">📅 Sana</div>
+      <div class="time-chips">
+        <button class="chip selected">Bugun</button>
+        <button class="chip">Ertaga</button>
+        <button class="chip">24-mart</button>
+        <button class="chip">25-mart</button>
+      </div>
+
+      <div class="field-label">⏰ Vaqt</div>
+      <div class="time-chips">
+        <button class="chip">09:00</button>
+        <button class="chip">10:00</button>
+        <button class="chip">11:00</button>
+        <button class="chip">12:00</button>
+        <button class="chip selected">14:00</button>
+        <button class="chip">15:00</button>
+        <button class="chip">16:00</button>
+        <button class="chip">17:00</button>
+      </div>
+
+      <div class="field-label">🏠 Xonalar soni</div>
+      <div class="counter">
+        <button class="counter-btn" onclick="changeCount(-1)">−</button>
+        <span class="counter-val" id="room-count">2</span>
+        <button class="counter-btn" onclick="changeCount(1)">+</button>
+      </div>
+
+      <div class="field-label">📝 Qo'shimcha izoh</div>
+      <div class="input-box" style="color:var(--text3);">Masalan: Oshxona va hammomga alohida...</div>
+
+      <div class="price-summary">
+        <div class="price-row">
+          <span id="price-label">Narx (2 xona × 80 000)</span>
+          <span id="price-base">160 000 so'm</span>
+        </div>
+        <div class="price-row">
+          <span>Platforma xizmati (10%)</span>
+          <span id="price-fee">16 000 so'm</span>
+        </div>
+        <div class="price-row total">
+          <span>Jami</span>
+          <span id="price-total">176 000 so'm</span>
+        </div>
+      </div>
+
+      <div class="booking-btn-wrap">
+        <button class="btn btn-primary" onclick="showScreen(3)">Buyurtma berish ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SCREEN 3: TRACKING ══════ -->
+  <div class="screen" id="s3">
+    <div class="topbar">
+      <button class="topbar-back" onclick="showScreen(1)">←</button>
+      <span class="topbar-title">Buyurtma holati</span>
+    </div>
+    <div class="scroll-area">
+      <div class="order-header">
+        <div>
+          <div class="order-num-label">Buyurtma raqami</div>
+          <div class="order-num">#CL-2847</div>
+        </div>
+        <div class="badge badge-amber">Jarayonda</div>
+      </div>
+
+      <div class="map-placeholder">
+        📍
+        <span>Ijrochi yo'lda...</span>
+      </div>
+
+      <div class="stepper">
+        <div class="step">
+          <div class="step-left">
+            <div class="step-circle done">✓</div>
+            <div class="step-line done"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Buyurtma qabul qilindi</div>
+            <div class="step-sub">Ijrochi qidirilmoqda...</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-left">
+            <div class="step-circle done">✓</div>
+            <div class="step-line done"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Ijrochi topildi</div>
+            <div class="step-sub">Aziza Karimova — 4.9 ⭐</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-left">
+            <div class="step-circle current">✓</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Ijrochi yo'lda</div>
+            <div class="step-sub">Taxminan 15 daqiqa</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-left">
+            <div class="step-circle todo">●</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title todo">Tozalash jarayoni</div>
+            <div class="step-sub">Hozir bajarilmoqda...</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-left">
+            <div class="step-circle todo">☆</div>
+          </div>
+          <div class="step-content">
+            <div class="step-title todo">Bajarildi!</div>
+            <div class="step-sub">Xizmatni baholang</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="executor-mini">
+        <div class="executor-avatar">👩‍🦰</div>
+        <div class="executor-info">
+          <div class="executor-name">Aziza Karimova</div>
+          <div class="executor-type">⭐ 4.9 • 234 ish bajargan</div>
+        </div>
+        <button class="call-btn">📞</button>
+      </div>
+
+      <div class="rate-btn-wrap">
+        <button class="btn btn-amber" onclick="showScreen(4)">Xizmatni baholash ⭐</button>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="showScreen(1)"><span>🏠</span><span>Bosh sahifa</span></div>
+      <div class="nav-item active"><span>📋</span><span style="color:var(--green);">Buyurtmalar</span></div>
+      <div class="nav-item"><span>👤</span><span>Profil</span></div>
+    </div>
+  </div>
+
+  <!-- ══════ SCREEN 4: RATING ══════ -->
+  <div class="screen" id="s4">
+    <div class="topbar">
+      <button class="topbar-back" onclick="showScreen(3)">←</button>
+      <span class="topbar-title">Baholash</span>
+    </div>
+    <div class="scroll-area" style="padding-top:20px;">
+      <div class="rating-avatar">👩‍🦰</div>
+      <div style="text-align:center;margin-top:12px;">
+        <div style="font-size:18px;font-weight:700;color:var(--text);">Aziza Karimova</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px;">Uy tozalash xizmati</div>
+      </div>
+
+      <div class="stars-row" id="stars-row">
+        <span class="star selected" onclick="setRating(1)">★</span>
+        <span class="star selected" onclick="setRating(2)">★</span>
+        <span class="star selected" onclick="setRating(3)">★</span>
+        <span class="star selected" onclick="setRating(4)">★</span>
+        <span class="star" onclick="setRating(5)">★</span>
+      </div>
+      <div class="rating-label" id="rating-label">Yaxshi 😊</div>
+
+      <div class="tags-wrap">
+        <button class="tag selected" onclick="toggleTag(this)">Toza ishladi</button>
+        <button class="tag" onclick="toggleTag(this)">Vaqtida keldi</button>
+        <button class="tag selected" onclick="toggleTag(this)">Xushmuomala</button>
+        <button class="tag" onclick="toggleTag(this)">Professional</button>
+        <button class="tag" onclick="toggleTag(this)">Tez bajaradi</button>
+        <button class="tag selected" onclick="toggleTag(this)">Tavsiya qilaman</button>
+      </div>
+
+      <div class="textarea-box">Fikr va takliflaringizni yozing...</div>
+
+      <div class="rating-btn-wrap">
+        <button class="btn btn-primary" onclick="showScreen(1)">Yuborish ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SCREEN 5: EXECUTOR DASHBOARD ══════ -->
+  <div class="screen" id="s5">
+    <div class="exec-header">
+      <div class="status-bar dark" style="padding:0;margin-bottom:12px;">
+        <span class="status-time">9:41</span>
+        <span class="status-icons">5G 🔋</span>
+      </div>
+      <div class="exec-top">
+        <div class="exec-avatar">👨</div>
+        <div class="exec-name-wrap">
+          <div class="exec-hi">Salom!</div>
+          <div class="exec-name">Bobur Toshmatov</div>
+        </div>
+        <div class="online-badge">
+          <div class="online-dot"></div>
+          Online
+        </div>
+      </div>
+      <div class="exec-stats">
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--success);">340 000</div>
+          <div class="stat-label">Bugungi daromad</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--amber);">4</div>
+          <div class="stat-label">Bajarilgan</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--amber);">4.8</div>
+          <div class="stat-label">Reyting</div>
+        </div>
+      </div>
+    </div>
+    <div class="exec-curve"></div>
+
+    <div class="scroll-area">
+      <div style="padding:0 20px 12px;">
+        <div class="card chart-card" style="padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:14px;font-weight:700;color:var(--text);">Haftalik daromad</span>
+            <span style="font-size:14px;font-weight:800;color:var(--green);">1 840 000 so'm</span>
+          </div>
+          <div class="chart-bars">
+            <div class="bar-wrap"><div class="bar" style="height:40%;"></div><span class="bar-day">Du</span></div>
+            <div class="bar-wrap"><div class="bar" style="height:65%;"></div><span class="bar-day">Se</span></div>
+            <div class="bar-wrap"><div class="bar" style="height:50%;"></div><span class="bar-day">Ch</span></div>
+            <div class="bar-wrap"><div class="bar" style="height:80%;"></div><span class="bar-day">Pa</span></div>
+            <div class="bar-wrap"><div class="bar" style="height:70%;"></div><span class="bar-day">Ju</span></div>
+            <div class="bar-wrap"><div class="bar active" style="height:95%;"></div><span class="bar-day">Sh</span></div>
+            <div class="bar-wrap"><div class="bar" style="height:55%;"></div><span class="bar-day">Ya</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        Yangi buyurtmalar
+        <span style="background:rgba(239,68,68,0.1);color:var(--red);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;">3 ta</span>
+      </div>
+
+      <div class="order-card">
+        <div class="order-card-top">
+          <div>
+            <div class="order-type">Uy tozalash <span style="background:rgba(245,158,11,0.15);color:var(--amber);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-left:6px;">Tezkor</span></div>
+            <div class="order-meta">#CL-2847 • 2.3 km</div>
+            <div class="order-meta">📍 Chilonzor, 7-kvartal &nbsp; ⏰ 14:00</div>
+          </div>
+          <div class="order-price">264 000</div>
+        </div>
+        <div class="order-btns">
+          <button class="accept-btn" onclick="showScreen(6)">Qabul qilish ✓</button>
+          <button class="reject-btn">Rad etish</button>
+        </div>
+      </div>
+
+      <div class="order-card" style="border-color:var(--border);">
+        <div class="order-card-top">
+          <div>
+            <div class="order-type">Oyna yuvish</div>
+            <div class="order-meta">#CL-2848 • 4.1 km</div>
+            <div class="order-meta">📍 Yunusobod, 4-kvartal &nbsp; ⏰ 16:00</div>
+          </div>
+          <div class="order-price">110 000</div>
+        </div>
+        <div class="order-btns">
+          <button class="accept-btn" onclick="showScreen(6)">Qabul qilish ✓</button>
+          <button class="reject-btn">Rad etish</button>
+        </div>
+      </div>
+
+      <div class="order-card" style="border-color:var(--border);">
+        <div class="order-card-top">
+          <div>
+            <div class="order-type">Ofis tozalash</div>
+            <div class="order-meta">#CL-2849 • 5.7 km</div>
+            <div class="order-meta">📍 Mirzo Ulug'bek t. &nbsp; ⏰ Ertaga 09:00</div>
+          </div>
+          <div class="order-price">330 000</div>
+        </div>
+        <div class="order-btns">
+          <button class="accept-btn" onclick="showScreen(6)">Qabul qilish ✓</button>
+          <button class="reject-btn">Rad etish</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active"><span>🏠</span><span style="color:var(--green);">Asosiy</span></div>
+      <div class="nav-item"><span>📋</span><span>Buyurtmalar</span></div>
+      <div class="nav-item"><span>💰</span><span>Hamyon</span></div>
+      <div class="nav-item"><span>👤</span><span>Profil</span></div>
+    </div>
+  </div>
+
+  <!-- ══════ SCREEN 6: ACTIVE ORDER ══════ -->
+  <div class="screen" id="s6">
+    <div class="topbar">
+      <button class="topbar-back" onclick="showScreen(5)">←</button>
+      <span class="topbar-title">Faol buyurtma</span>
+    </div>
+    <div class="scroll-area">
+      <div class="active-order-header">
+        <div class="aoh-row">
+          <div>
+            <div class="aoh-label">Buyurtma</div>
+            <div class="aoh-val">#CL-2847</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="aoh-price">264 000</div>
+            <div class="aoh-currency">so'm</div>
+          </div>
+        </div>
+        <div class="aoh-meta">
+          <div class="aoh-meta-item">
+            <div class="aoh-label">Xizmat turi</div>
+            <div style="font-size:14px;font-weight:600;color:#fff;">Uy tozalash</div>
+          </div>
+          <div class="aoh-meta-item">
+            <div class="aoh-label">Vaqt</div>
+            <div style="font-size:14px;font-weight:600;color:#fff;">14:00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="client-card">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);position:absolute;margin-top:-36px;"></div>
+        <div class="client-avatar">🧑</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Jamshid Aliyev</div>
+          <div style="font-size:12px;color:var(--text2);">📍 Chilonzor, 7-kvartal</div>
+        </div>
+        <div class="contact-btns">
+          <button class="contact-btn chat">💬</button>
+          <button class="contact-btn phone">📞</button>
+        </div>
+      </div>
+
+      <div style="padding:0 20px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">Holatni yangilash</div>
+      </div>
+      <div class="status-steps">
+        <div class="status-step" onclick="setStep(0)" id="step0">
+          <span>📍</span><span>Yo'lda</span>
+        </div>
+        <div class="status-step active" onclick="setStep(1)" id="step1">
+          <span>✨</span><span>Boshlandi</span>
+        </div>
+        <div class="status-step" onclick="setStep(2)" id="step2">
+          <span>✓</span><span>Bajarildi</span>
+        </div>
+      </div>
+
+      <div class="timer-card">
+        <div class="timer-label">Ish vaqti</div>
+        <div class="timer-val" id="timer">01:24:35</div>
+      </div>
+
+      <div style="padding:0 20px;margin-bottom:8px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Bajarish ro'yxati</div>
+      </div>
+      <div class="checklist">
+        <div class="check-item">
+          <div class="check-box checked" onclick="toggleCheck(this)">✓</div>
+          <span class="check-text done">Oshxona tozalash</span>
+        </div>
+        <div class="check-item">
+          <div class="check-box checked" onclick="toggleCheck(this)">✓</div>
+          <span class="check-text done">Xonalar tozalash</span>
+        </div>
+        <div class="check-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <span class="check-text">Hammom tozalash</span>
+        </div>
+        <div class="check-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <span class="check-text">Derazalar artish</span>
+        </div>
+      </div>
+
+      <div class="complete-btn-wrap">
+        <button class="btn btn-disabled" id="complete-btn">Avval ishni bajaring</button>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="showScreen(5)"><span>🏠</span><span>Asosiy</span></div>
+      <div class="nav-item active"><span>📋</span><span style="color:var(--green);">Buyurtmalar</span></div>
+      <div class="nav-item"><span>💰</span><span>Hamyon</span></div>
+      <div class="nav-item"><span>👤</span><span>Profil</span></div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+  let currentScreen = 0;
+  let roomCount = 2;
+  let ratingVal = 4;
+  let timerSecs = 5075;
+  let timerInterval;
+
+  function showScreen(n) {
+    document.querySelectorAll('.screen').forEach((s,i) => s.classList.toggle('active', i === n));
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i === n));
+    currentScreen = n;
+    if (n === 6) startTimer();
+    else stopTimer();
+  }
+
+  // Room counter
+  function changeCount(d) {
+    roomCount = Math.max(1, Math.min(10, roomCount + d));
+    document.getElementById('room-count').textContent = roomCount;
+    const base = roomCount * 80000;
+    const fee = Math.round(base * 0.1);
+    document.getElementById('price-label').textContent = `Narx (${roomCount} xona × 80 000)`;
+    document.getElementById('price-base').textContent = base.toLocaleString('uz') + ' so\'m';
+    document.getElementById('price-fee').textContent = fee.toLocaleString('uz') + ' so\'m';
+    document.getElementById('price-total').textContent = (base + fee).toLocaleString('uz') + ' so\'m';
+  }
+
+  // Chips
+  document.querySelectorAll('.time-chips').forEach(group => {
+    group.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+      });
+    });
+  });
+
+  // Stars
+  const labels = ['', 'Yomon 😞', 'Qoniqarsiz 😕', 'O\'rtacha 😐', 'Yaxshi 😊', 'Ajoyib 🤩'];
+  function setRating(n) {
+    ratingVal = n;
+    document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('selected', i < n));
+    document.getElementById('rating-label').textContent = labels[n];
+  }
+
+  // Tags
+  function toggleTag(el) { el.classList.toggle('selected'); }
+
+  // Status steps
+  function setStep(n) {
+    document.querySelectorAll('.status-step').forEach((s,i) => s.classList.toggle('active', i === n));
+    if (n === 2) {
+      document.getElementById('complete-btn').className = 'btn btn-primary';
+      document.getElementById('complete-btn').textContent = 'Buyurtmani yakunlash ✓';
+    } else {
+      document.getElementById('complete-btn').className = 'btn btn-disabled';
+      document.getElementById('complete-btn').textContent = 'Avval ishni bajaring';
+    }
+  }
+
+  // Checklist
+  function toggleCheck(box) {
+    const checked = box.classList.toggle('checked');
+    box.textContent = checked ? '✓' : '';
+    const text = box.nextElementSibling;
+    text.classList.toggle('done', checked);
+  }
+
+  // Timer
+  function startTimer() {
+    stopTimer();
+    timerInterval = setInterval(() => {
+      timerSecs++;
+      const h = String(Math.floor(timerSecs/3600)).padStart(2,'0');
+      const m = String(Math.floor((timerSecs%3600)/60)).padStart(2,'0');
+      const s = String(timerSecs%60).padStart(2,'0');
+      const el = document.getElementById('timer');
+      if(el) el.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+  }
+  function stopTimer() { clearInterval(timerInterval); }
+</script>
+// Backend bilan bog'lanish qismi
+  async function refreshServices() {
+    try {
+      // Backend manzili (Uvicorn ishlayotgan port)
+      const response = await fetch('http://127.0.0.1:8000/services');
+      const services = await response.json();
+      
+      // 1-ekrandagi (Mijoz bosh sahifasi) gridni topish
+      const grid = document.querySelector('.services-grid');
+      
+      if (grid) {
+        grid.innerHTML = ''; // Mavjud statik ma'lumotlarni tozalash
+        services.forEach(s => {
+          // Dizayn tizimidagi rang va ikonkalarni chiqarish
+          grid.innerHTML += 
+            <div class="service-card" onclick="showScreen(2)">
+              <div class="service-icon" style="background: ${s.color}20; color: ${s.color}">
+                <i class="fas fa-${s.icon}"></i>
+              </div>
+              <div class="service-name">${s.name}</div>
+            </div>
+          ;
+        });
+      }
+    } catch (error) {
+      console.log("Backend ulanmagan. Iltimos, uvicorn'ni yoqing.");
+    }
+  }
+
+  // Sahifa yuklanganda xizmatlarni yangilash
+  window.addEventListener('load', () => {
+    refreshServices();
+  });
+</body>
+</html>
