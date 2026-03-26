@@ -1,29 +1,32 @@
 name: Android Build
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+on: [push, workflow_dispatch]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+
       - name: Install Dependencies
         run: npm install
+
       - name: Build Web Project
         run: |
           mkdir -p www
-          if [ -f "index.html" ]; then cp index.html www/; fi
+          [ -f index.html ] && cp index.html www/ || echo "No index.html"
+
       - name: Install Capacitor Android
         run: npm install @capacitor/android
+
       - name: Capacitor Sync
         run: npx cap sync android
+
       - name: Build Android APK
         run: |
           cd android
